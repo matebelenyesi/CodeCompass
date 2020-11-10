@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <regex>
 
 #include <boost/log/expressions.hpp>
 #include <boost/log/expressions/attr.hpp>
@@ -210,6 +211,19 @@ void incrementalCleanup(cc::parser::ParserContext& ctx_)
   }
 }
 
+std::string& convertWrongDatabaseNameToValid(std::string&& name)
+{
+    std::transform(name.begin(), name.end(), name.begin(),
+                   [](unsigned char c)
+                   {
+                       if(c=='-')
+                           c='_';
+                       return std::tolower(c);
+                   });
+
+    return name;
+}
+
 int main(int argc, char* argv[])
 {
   std::string compassRoot = cc::util::binaryPathToInstallDir(argv[0]);
@@ -284,9 +298,21 @@ int main(int argc, char* argv[])
   }
   
   //--- Check database and project directory existence ---//
+
+  std::string databaseString = vm["database"].as<std::string>(); 
+  std::regex re ("(.*)(database=)([^;]*)(.*)");	
+  std::size_t databasePart = databaseString.find("database=")+9;
+	
+  std::cmatch m;
+  if(std::regex_match(databaseString.c_str(), m, re))
+  {
+    std::string valid = convertWrongDatabaseNameToValid(m[3].str());
+    databaseString.replace(databasePart,m[3].str().length(),valid);
+  }
   
+ 
   bool isNewDb = cc::util::connectDatabase(
-    vm["database"].as<std::string>(), false) == nullptr;
+          databaseString, false) == nullptr;
   bool isNewProject = !checkProjectDir(vm);
 
   if ((isNewProject ^ isNewDb) && !vm.count("force"))
@@ -319,7 +345,7 @@ int main(int argc, char* argv[])
   //--- Create and init database ---//
 
   std::shared_ptr<odb::database> db = cc::util::connectDatabase(
-    vm["database"].as<std::string>(), true);
+          databaseString, true);
 
   std::unordered_map<std::string, cc::parser::IncrementalStatus> fileStatus;
 
@@ -426,9 +452,9 @@ int main(int argc, char* argv[])
   }
 
   std::string database
-    = cc::util::connStrComponent(vm["database"].as<std::string>(), "database");
+    = cc::util::connStrComponent(databaseString, "database");
 
-  pt.put("database", vm["database"].as<std::string>());
+  pt.put("database", databaseString);
 
   if (vm.count("description"))
     pt.put("description", vm["description"].as<std::string>());
