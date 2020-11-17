@@ -211,12 +211,13 @@ void incrementalCleanup(cc::parser::ParserContext& ctx_)
   }
 }
 
-std::string& convertWrongDatabaseNameToValid(std::string&& name)
+std::string& convertWrongDatabaseNameToValid(std::string& name)
 {
+
     std::transform(name.begin(), name.end(), name.begin(),
                    [](unsigned char c)
                    {
-                       if(c=='-')
+                       if(!((c>='a' && c<='z') || (c>='A' && c<='Z') || (c>='0' && c<='9') || (c=='_')))
                            c='_';
                        return std::tolower(c);
                    });
@@ -306,7 +307,8 @@ int main(int argc, char* argv[])
   std::cmatch m;
   if(std::regex_match(databaseString.c_str(), m, re))
   {
-    std::string valid = convertWrongDatabaseNameToValid(m[3].str());
+    std::string old = m[3].str();
+    std::string valid = convertWrongDatabaseNameToValid(old);
     databaseString.replace(databasePart,m[3].str().length(),valid);
   }
   
@@ -465,3 +467,4 @@ int main(int argc, char* argv[])
 
   return 0;
 }
+
