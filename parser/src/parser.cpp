@@ -3,7 +3,6 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <regex>
 
 #include <boost/log/expressions.hpp>
 #include <boost/log/expressions/attr.hpp>
@@ -211,20 +210,6 @@ void incrementalCleanup(cc::parser::ParserContext& ctx_)
   }
 }
 
-std::string& convertWrongDatabaseNameToValid(std::string& name)
-{
-
-    std::transform(name.begin(), name.end(), name.begin(),
-                   [](unsigned char c)
-                   {
-                       if(!((c>='a' && c<='z') || (c>='A' && c<='Z') || (c>='0' && c<='9') || (c=='_')))
-                           c='_';
-                       return std::tolower(c);
-                   });
-
-    return name;
-}
-
 int main(int argc, char* argv[])
 {
   std::string compassRoot = cc::util::binaryPathToInstallDir(argv[0]);
@@ -300,18 +285,8 @@ int main(int argc, char* argv[])
   
   //--- Check database and project directory existence ---//
 
-  std::string databaseString = vm["database"].as<std::string>(); 
-  std::regex re ("(.*)(database=)([^;]*)(.*)");	
-  std::size_t databasePart = databaseString.find("database=")+9;
-	
-  std::cmatch m;
-  if(std::regex_match(databaseString.c_str(), m, re))
-  {
-    std::string old = m[3].str();
-    std::string valid = convertWrongDatabaseNameToValid(old);
-    databaseString.replace(databasePart,m[3].str().length(),valid);
-  }
-  
+  std::string databaseString =  vm["database"].as<std::string>(); 
+  databaseString = cc::util::replaceInvalidCharactersInConnectionString(databaseString);
  
   bool isNewDb = cc::util::connectDatabase(
           databaseString, false) == nullptr;
@@ -467,4 +442,3 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-

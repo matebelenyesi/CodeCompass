@@ -97,6 +97,15 @@ inline std::string getDbDriver()
 #endif
 }
 
+/**
+ * This function replaces invalid characters in the database name of
+ * a given connection string to underscore character.
+ * Valid characters: 'a'-'z' 'A-Z' '0-9' '_'
+ * @param databaseString The connection string with potential invalid characters.
+ * @return Same string with replaced invalid characters to underscore.
+ */
+std::string& replaceInvalidCharactersInConnectionString(std::string& databaseString);
+
 } // util
 } // cc
 

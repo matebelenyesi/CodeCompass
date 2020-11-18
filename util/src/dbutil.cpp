@@ -1,6 +1,7 @@
 #include <fstream>
 #include <map>
 #include <vector>
+#include <regex>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
@@ -494,6 +495,36 @@ std::string connStrComponent(
     pos2 = connStr_.length();
 
   return connStr_.substr(pos3, pos2 - pos3);
+}
+
+std::string& convertWrongDatabaseNameToValid(std::string& name)
+{
+
+    std::transform(name.begin(), name.end(), name.begin(),
+                   [](unsigned char c)
+                   {
+                       if(!((c>='a' && c<='z') || (c>='A' && c<='Z') || (c>='0' && c<='9') || (c=='_')))
+                           c='_';
+                       return std::tolower(c);
+                   });
+
+    return name;
+}
+
+std::string& replaceInvalidCharactersInConnectionString(std::string& databaseString)
+{
+    std::regex re ("(.*)(database=)([^;]*)(.*)");	
+  std::size_t databasePart = databaseString.find("database=")+9;
+	
+  std::cmatch m;
+  if(std::regex_match(databaseString.c_str(), m, re))
+  {
+    std::string old = m[3].str();
+    std::string valid = convertWrongDatabaseNameToValid(old);
+    databaseString.replace(databasePart,m[3].str().length(),valid);
+  }
+
+  return databaseString;
 }
 
 } // util
