@@ -513,7 +513,7 @@ std::string& convertWrongDatabaseNameToValid(std::string& name)
 
 std::string& replaceInvalidCharactersInConnectionString(std::string& databaseString)
 {
-    std::regex re ("(.*)(database=)([^;]*)(.*)");	
+  std::regex re ("(.*)(database=)([^;]*)(.*)");	
   std::size_t databasePart = databaseString.find("database=")+9;
 	
   std::cmatch m;
