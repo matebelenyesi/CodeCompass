@@ -285,8 +285,11 @@ int main(int argc, char* argv[])
   
   //--- Check database and project directory existence ---//
 
-  std::string databaseString =  vm["database"].as<std::string>(); 
+  std::string databaseString =  vm["database"].as<std::string>();
+  
+  #ifdef DATABASE_PGSQL
   databaseString = cc::util::replaceInvalidCharactersInConnectionString(databaseString);
+  #endif
  
   bool isNewDb = cc::util::connectDatabase(
           databaseString, false) == nullptr;
