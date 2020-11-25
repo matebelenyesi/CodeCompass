@@ -298,6 +298,11 @@ void CppServiceHandler::getProperties(
           function.qualifiedName.find_last_of(':') + 1);
         return_["Qualified name"] = function.qualifiedName;
         return_["Signature"] = function.name;
+        if(function.name == "operator delete")
+        {
+         // return_["Pointer to delete"] = (*(function.parameters[0])).name;
+         return_["Parameter count"] = std::to_string(function.parameters.size()); //parameter count 0 instead of 1
+        }
 
         break;
       }
